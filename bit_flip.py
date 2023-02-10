@@ -15,6 +15,7 @@ class Bit_Flip_Env:
         self.obervation_space = {'observation': np.empty((self.n_bits)),
                                 'desired_state': np.empty((self.n_bits)),
                                 'goal_state': np.empty((self.n_bits))}
+    
     def reset(self):
         """
         """
