@@ -40,6 +40,8 @@ class HER:
         self.mem_cntr += 1
 
     def store_episode(self, ep_memory):
+        """
+        """
         states, actions, rewards, states_, dones, dg, ag, ag_ = ep_memory
 
         if self.strategy == 'final':
@@ -57,12 +59,14 @@ class HER:
                                   dones[idx], goal, ag[idx], ag_[idx])
 
     def sample_memory(self):
+        """
+        """
         last_mem = min(self.mem_cntr, self.max_mem)
         batch = np.random.choice(last_mem, self.batch_size, replace=False)
 
         return self.states[batch], self.actions[batch], self.rewards[batch],\
             self.states_[batch], self.dones[batch],\
-            self.desired_goals[batch]
+            self.desired_goals[batch], self.achieved_goals[batch]
 
     def ready(self):
         return self.mem_cntr > self.batch_size
