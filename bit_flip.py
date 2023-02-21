@@ -12,9 +12,10 @@ class Bit_Flip_Env:
         self.n_actions = n
 
         self.observation = self.reset()
-        self.obervation_space = {'observation': np.empty((self.n_bits)),
-                                'desired_state': np.empty((self.n_bits)),
-                                'goal_state': np.empty((self.n_bits))}
+        self.observation_space = {'observation': np.empty((self.n_bits)),
+                                  'achieved_goal': np.empty((self.n_bits)),
+                                  'desired_goal': np.empty((self.n_bits)),
+                                  }
     
     def reset(self):
         """
