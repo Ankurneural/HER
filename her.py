@@ -66,7 +66,8 @@ class HER:
 
         return self.states[batch], self.actions[batch], self.rewards[batch],\
             self.states_[batch], self.dones[batch],\
-            self.desired_goals[batch], self.achieved_goals[batch]
+            self.desired_goals[batch]
+        # , self.achieved_goals[batch]
 
     def ready(self):
         return self.mem_cntr > self.batch_size
