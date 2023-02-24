@@ -57,7 +57,6 @@ class DeepQNetwork(nn.Module):
     def forward(self, state):
         flat1 = F.relu(self.fc1(state))
         actions = self.fc2(flat1)
-
         return actions
 
     def save_checkpoint(self):

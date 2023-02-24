@@ -44,7 +44,7 @@ def train(agent, worker, memory):
 
 
 def main():
-    n_bits = 32
+    n_bits = 16
     env = Bit_Flip_Env(n_bits, max_steps=n_bits)
     random.seed(123)
     np.random.seed(123)
