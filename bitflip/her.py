@@ -3,7 +3,7 @@ import numpy as np
 
 class HER:
     def __init__(self, max_mem, input_shape, n_actions, goal_shape, batch_size,
-                 reward_fn, strategy='final'):
+                 reward_fn, strategy='final', k=4):
         """
         """
         self.max_mem = max_mem
@@ -12,6 +12,7 @@ class HER:
         self.batch_size = batch_size
         self.input_shape = input_shape
         self.reward_fn = reward_fn
+        self.k = k
 
         self.states = np.zeros((max_mem, input_shape), dtype=np.float64)
         self.states_ = np.zeros((max_mem, input_shape), dtype=np.float64)
@@ -36,9 +37,8 @@ class HER:
         self.mem_cntr += 1
 
     def store_episode(self, ep_memory):
-        """
-        """
         states, actions, rewards, states_, dones, dg, ag, ag_ = ep_memory
+        hindsight_goals = []
 
         if self.strategy == 'final':
             hindsight_goals = [[ag_[-1]]] * len(ag_)
@@ -46,10 +46,41 @@ class HER:
         elif self.strategy is None:
             hindsight_goals = [[dg[0]]] * len(dg)
 
+        elif self.strategy == 'future':
+            for idx, _ in enumerate(ag_):
+                t_step_goals = []
+                for m in range(self.k):
+                    if idx + m >= len(ag_) - 1:
+                        break
+                    goal_idx = np.random.randint(idx + 1, len(ag_))
+                    t_step_goals.append(ag_[goal_idx])
+                hindsight_goals.append(t_step_goals)
+
+        elif self.strategy == 'random':
+            if self.mem_cntr <= len(ag_):
+                max_mem = len(ag_)
+                memory = ag_
+            else:
+                max_mem = min(self.mem_cntr, self.max_mem)
+                memory = self.achieved_goals_
+            for idx, _ in enumerate(ag_):
+                t_step_goals = []
+                for m in range(self.k):
+                    goal_idx = np.random.randint(0, max_mem)
+                    t_step_goals.append(memory[goal_idx])
+                hindsight_goals.append(t_step_goals)
+
+        elif self.strategy == 'episode':
+            for idx, _ in enumerate(ag_):
+                t_step_goals = []
+                for m in range(self.k):
+                    goal_idx = np.random.randint(0, len(ag_))
+                    t_step_goals.append(ag_[goal_idx])
+                hindsight_goals.append(t_step_goals)
+
         for idx, s in enumerate(states):
             self.store_memory(s, actions[idx], rewards[idx], states_[idx],
                               dones[idx], dg[idx], ag[idx], ag_[idx])
-                              
             for goal in hindsight_goals[idx]:
                 reward = self.reward_fn(ag_[idx], goal, {})
                 self.store_memory(s, actions[idx], reward, states_[idx],

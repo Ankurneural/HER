@@ -13,9 +13,12 @@ def train(agent, worker, memory):
     n_cycles = 50
     n_updates = 40
     n_tests = 10
+
     for epoch in range(epochs):
+
         for cycle in range(n_cycles):
             score_history, success_history = [], []
+
             for i in range(cycle_length):
                 score, success = worker.play_episode()
                 score_history.append(score)
@@ -31,6 +34,7 @@ def train(agent, worker, memory):
                 for _ in range(n_updates):
                     memories = memory.sample_memory()
                     agent.learn(memories)
+
         score_history, success_history = [], []
         for episode in range(n_tests):
             score, success = worker.play_episode(evaluate=True)
@@ -44,7 +48,7 @@ def train(agent, worker, memory):
 
 
 def main():
-    n_bits = 16
+    n_bits = 8
     env = Bit_Flip_Env(n_bits, max_steps=n_bits)
     random.seed(123)
     np.random.seed(123)
@@ -55,7 +59,7 @@ def main():
     max_size = 1_000_000
     input_shape = n_bits
     memory = HER(max_mem=max_size, input_shape=input_shape, n_actions=1,
-                 batch_size=batch_size, goal_shape=n_bits, strategy=None,
+                 batch_size=batch_size, goal_shape=n_bits, strategy="final",
                  reward_fn=env.compute_rewards)
     agent = Agent(lr=0.001, epsilon=0.2, n_actions=n_bits, eps_dec=0.0,
                   batch_size=batch_size, input_dims=2*input_shape, gamma=0.98)
