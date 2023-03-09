@@ -8,7 +8,7 @@ if __name__ == "__main__":
     env = gym.make('PandaReach-v3', render_mode='human')
     obs, info = env.reset()
     
-    for _ in range(1000):
+    for _ in range(1000): 
         action = env.action_space.sample()
         obs_, rew, terminated, truncated, info = env.step(action)
 

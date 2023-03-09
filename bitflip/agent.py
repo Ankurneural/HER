@@ -33,6 +33,8 @@ class Agent:
                                    name=self.env_name+'_'+self.algo+'_q_next',
                                    chkpt_dir=self.chkpt_dir)
 
+        self.predicted_q, self.actual_q, self.loss = list(), list(), list()
+
     def choose_action(self, observation, evaluate=False):
         if np.random.random() > self.epsilon or evaluate:
             state = T.tensor([observation],
@@ -83,6 +85,10 @@ class Agent:
         q_next = self.q_next.forward(states_).max(dim=1)[0]
         q_next[dones] = 0.0
         q_target = rewards + self.gamma*q_next
+
+        self.predicted_q.append(T.mean(q_pred))
+        self.actual_q.append(T.mean(q_target))
+        self.loss.append(T.mean(T.square(q_target - q_pred)))
 
         loss = self.q_eval.loss(q_target, q_pred).to(self.q_eval.device)
         loss.backward()

@@ -5,15 +5,16 @@ from agent import Agent
 from episode import EpisodeWorker
 from her import HER
 from bit_flip import Bit_Flip_Env
-
+import matplotlib.pyplot as plt
 
 def train(agent, worker, memory):
-    epochs = 100
-    cycle_length = 16
-    n_cycles = 50
-    n_updates = 40
+    epochs = 200
+    cycle_length = 50
+    n_cycles = 25
+    n_updates = 20
     n_tests = 10
 
+    success_his_mean = list()
     for epoch in range(epochs):
 
         for cycle in range(n_cycles):
@@ -26,14 +27,16 @@ def train(agent, worker, memory):
 
             cycle_avg_score = np.mean(score_history)
             cycle_avg_success = np.mean(success_history)
-            print('Epoch: {} Cycle: {} Training Avg Score {:.1f} '
-                 'Trainig Avg Success: {:.3f}'.
-                 format(epoch, cycle, cycle_avg_score, cycle_avg_success))
+            # print('Epoch: {} Cycle: {} Training Avg Score {:.1f} '
+            #      'Trainig Avg Success: {:.3f}'.
+            #      format(epoch, cycle, cycle_avg_score, cycle_avg_success))
             
             if memory.ready():
                 for _ in range(n_updates):
                     memories = memory.sample_memory()
                     agent.learn(memories)
+        
+        success_his_mean.append([cycle_avg_success]*n_updates*n_cycles)
 
         score_history, success_history = [], []
         for episode in range(n_tests):
@@ -44,7 +47,22 @@ def train(agent, worker, memory):
         avg_score = np.mean(score_history)
         print('Epoch: {} Testing Agent. Avg Score: {:.1f} '
               'Avg Sucess: {:.3f}'.
-              format(epoch, avg_score, avg_success))
+              format(epoch, avg_score, avg_success)) 
+    
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(30,20))
+    ax.plot([i.detach().cpu().numpy() for i in agent.actual_q], label="True Q")
+    ax.plot([i.detach().cpu().numpy() for i in agent.predicted_q], label="Predicted Q")
+    ax.plot([i.detach().cpu().numpy() for i in agent.loss], label="Loss")
+    
+    ax2 = ax.twinx()
+    ax2.plot(np.hstack(success_his_mean), label="Success")
+    
+    ax.legend()
+    ax.grid()
+
+    plt.tight_layout() 
+    plt.savefig("bitflip/plot24.png")
+    
 
 
 def main():
@@ -59,7 +77,7 @@ def main():
     max_size = 1_000_000
     input_shape = n_bits
     memory = HER(max_mem=max_size, input_shape=input_shape, n_actions=1,
-                 batch_size=batch_size, goal_shape=n_bits, strategy="final",
+                 batch_size=batch_size, goal_shape=n_bits, strategy=None,
                  reward_fn=env.compute_rewards)
     agent = Agent(lr=0.001, epsilon=0.2, n_actions=n_bits, eps_dec=0.0,
                   batch_size=batch_size, input_dims=2*input_shape, gamma=0.98)
